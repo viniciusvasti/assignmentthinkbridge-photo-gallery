@@ -3,12 +3,13 @@ module.exports = {
         "browser": true,
         "es2021": true
     },
-    "extends": "eslint:recommended",
+    "extends": "standard-with-typescript",
     "parserOptions": {
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
     "rules": {
-        "indent": ["error", 4],
+        "@typescript-eslint/indent": ["error", 4],
+        "@typescript-eslint/semi": ["error", "always"],
     }
 }
