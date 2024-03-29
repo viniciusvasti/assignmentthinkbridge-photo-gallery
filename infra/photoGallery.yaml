@@ -1,0 +1,6 @@
+Resources:
+  PhotoGallery:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-photogallery
+      AccessControl: PublicRead

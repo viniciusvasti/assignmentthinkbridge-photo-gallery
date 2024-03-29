@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +18,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={cn(inter.className, "bg-gray-100")}>
+            <body className={cn(inter.className, "bg-gray-200")}>
                 <main className="flex min-h-screen flex-col items-center gap-10 py-12 px-4 sm:px-12">
                     <h1 className="text-5xl mb-4">
                         <span className="font-bold">think</span>
