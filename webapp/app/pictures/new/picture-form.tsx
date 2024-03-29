@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
     Form,
     FormControl,
@@ -20,6 +20,7 @@ import { pictureFormSchema } from "@/lib/schemas/picture";
 import { createPicture } from "@/lib/actions/pictures.actions";
 
 export default function PictureForm() {
+    const [file, setFile] = useState<File>();
     const router = useRouter();
     const form = useForm<
         z.infer<typeof pictureFormSchema> & {
@@ -35,8 +36,8 @@ export default function PictureForm() {
 
     async function onSubmit(values: z.infer<typeof pictureFormSchema>) {
         try {
-            console.log(values);
             const formData = new FormData();
+            formData.append("file", file!);
             formData.append("image", values.image);
             formData.append("name", values.name);
             if (values.description) {
@@ -44,7 +45,7 @@ export default function PictureForm() {
             }
             await createPicture(formData);
 
-            // router.back();
+            router.back();
         } catch (error: any) {
             console.error(error);
             form.setError("serverError", {
@@ -64,7 +65,7 @@ export default function PictureForm() {
                     <FormField
                         control={form.control}
                         name="image"
-                        render={({ field }) => (
+                        render={({ field: { onChange, ...field } }) => (
                             <FormItem>
                                 <FormLabel>
                                     Picture
@@ -73,7 +74,14 @@ export default function PictureForm() {
                                     </span>
                                 </FormLabel>
                                 <FormControl>
-                                    <Input type="file" {...field} />
+                                    <Input
+                                        type="file"
+                                        {...field}
+                                        onChange={(e) => {
+                                            onChange(e.target.value);
+                                            setFile(e.target.files?.[0]);
+                                        }}
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
