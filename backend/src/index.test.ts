@@ -2,11 +2,30 @@ import type AWS from 'aws-sdk';
 import { handler } from './index';
 import { type PictureRequest } from './types';
 
+const items = [
+    {
+        id: '1',
+        name: 'Test 1',
+        description: 'Test 1',
+        imageUrl: 'https://test.com/test1.jpg',
+    },
+    {
+        id: '2',
+        name: 'Test 2',
+        description: 'Test 2',
+        imageUrl: 'https://test.com/test2.jpg',
+    },
+];
+
 const createEvent: PictureRequest = {
     action: 'create',
     name: 'Test',
     description: 'Test',
     imageUrl: 'https://test.com/test.jpg',
+};
+
+const listEvent: PictureRequest = {
+    action: 'listAll',
 };
 
 const deleteEvent: PictureRequest = {
@@ -15,6 +34,9 @@ const deleteEvent: PictureRequest = {
 };
 
 const mockPut = jest.fn();
+const mockScan = jest.fn((x) => ({
+    Items: items,
+}));
 const mockDelete = jest.fn();
 
 jest.mock('aws-sdk', () => ({
@@ -26,6 +48,9 @@ jest.mock('aws-sdk', () => ({
             }),
             delete: (x: AWS.DynamoDB.DocumentClient.DeleteItemInput) => ({
                 promise: () => mockDelete(x),
+            }),
+            scan: (x: AWS.DynamoDB.DocumentClient.ScanInput) => ({
+                promise: () => mockScan(x),
             }),
         })),
     },
@@ -71,6 +96,23 @@ describe('handler', () => {
         expect(response).toEqual({
             statusCode: 204,
             body: JSON.stringify({ message: 'Success' }),
+        });
+    });
+
+    it('should list all items', async() => {
+        // Act
+        const response = await handler(listEvent);
+
+        // Assert
+        expect(mockScan).toHaveBeenCalledWith({
+            TableName: tableName,
+            Limit: 20,
+            ExclusiveStartKey: undefined,
+        });
+
+        expect(response).toEqual({
+            statusCode: 200,
+            body: JSON.stringify(items),
         });
     });
 

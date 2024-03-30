@@ -13,6 +13,11 @@ export async function handler(
                 statusCode = 201;
                 await services.createPicture(event);
                 break;
+            case 'listAll':
+                return {
+                    statusCode,
+                    body: JSON.stringify(await services.listAllPictures(event)),
+                };
             case 'delete':
                 statusCode = 204;
                 await services.deletePicture(event);

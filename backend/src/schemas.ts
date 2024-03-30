@@ -9,3 +9,7 @@ export const pictureCreateSchema = zod.object({
 export const pictureDeleteSchema = zod.object({
     id: zod.string(),
 });
+
+export const pictureListSchema = zod.object({
+    page: zod.number().int().positive().default(1),
+});

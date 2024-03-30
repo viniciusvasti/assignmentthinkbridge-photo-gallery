@@ -1,6 +1,6 @@
 import AWS from 'aws-sdk';
-import { pictureCreateSchema, pictureDeleteSchema } from './schemas';
-import { type PictureRequest } from './types';
+import { pictureCreateSchema, pictureDeleteSchema, pictureListSchema } from './schemas';
+import { type Picture, type PictureRequest } from './types';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const tableName = process.env.DYNAMODB_TABLE_NAME ?? '';
@@ -32,7 +32,24 @@ async function createPicture(
         .promise();
 }
 
+/**
+ * List all pictures from the database paginated by 20 items.
+ */
+async function listAllPictures(event: PictureRequest): Promise<Picture[]> {
+    const { page } = pictureListSchema.parse(event);
+    const result = await dynamodb
+        .scan({
+            TableName: tableName,
+            Limit: 20,
+            ExclusiveStartKey: page > 1 ? { id: page.toString() } : undefined,
+        })
+        .promise();
+
+    return (result.Items ?? []) as Picture[];
+}
+
 export default {
     deletePicture,
     createPicture,
+    listAllPictures,
 };
