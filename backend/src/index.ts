@@ -1,22 +1,38 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { type APIGatewayProxyResult } from 'aws-lambda';
+import { type PictureRequest } from './types';
+import services from './services';
 
 export async function handler(
-    event: APIGatewayProxyEvent
+    event: PictureRequest,
 ): Promise<APIGatewayProxyResult> {
-    console.log("Received event:", JSON.stringify(event, null, 2));
+    console.log('Received event:', JSON.stringify(event, null, 2));
     try {
-        // Process the incoming event (e.g., extract parameters, perform logic)
+        let statusCode = 200;
+        switch (event.action) {
+            case 'create':
+                statusCode = 201;
+                await services.createPicture(event);
+                break;
+            case 'delete':
+                statusCode = 204;
+                await services.deletePicture(event);
+                break;
+            default:
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: 'Invalid action' }),
+                };
+        }
 
-        // Return a successful response with "Hello World" message
         return {
-            statusCode: 200,
-            body: JSON.stringify({ message: "Hello World" }),
+            statusCode,
+            body: JSON.stringify({ message: 'Success' }),
         };
     } catch (error) {
-        // Return an error response if something goes wrong
+        console.error(error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: "Internal Server Error" }),
+            body: JSON.stringify({ error: 'Internal Server Error' }),
         };
     }
 }
