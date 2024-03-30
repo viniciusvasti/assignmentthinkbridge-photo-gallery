@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { pictureFormSchema } from "@/lib/schemas/picture";
-import { createPicture } from "@/lib/actions/pictures.actions";
 
 export default function PictureForm() {
     const [file, setFile] = useState<File>();
@@ -43,7 +42,7 @@ export default function PictureForm() {
             if (values.description) {
                 formData.append("description", values.description);
             }
-            await createPicture(formData);
+            console.log(formData);
 
             router.back();
         } catch (error: any) {
