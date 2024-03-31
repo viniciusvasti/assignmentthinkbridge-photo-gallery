@@ -1,5 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Vinicius Santos Photo Gallery Infrastructure
+# resources prefix variable:
+- VsPhotoGalleryPrefix: vinicius-santos
+
 
 Resources:
   VSPhotoGalleryLambdaFunctionExecRole:
@@ -52,7 +55,7 @@ Resources:
       Timeout: 10
       MemorySize: 128
       Code:
-        S3Bucket: vs-photo-gallery-lambda-code
+        S3Bucket: ${VsPhotoGalleryPrefix}-lambda-code
         S3Key: code.zip
       Environment:
         Variables:
@@ -69,7 +72,7 @@ Resources:
   VSPhotoGalleryS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: vs-photo-gallery
+      BucketName: ${VsPhotoGalleryPrefix}-photo-gallery
       Tags:
         - Key: Application
           Value: vinicius-santos-assignment
@@ -77,7 +80,7 @@ Resources:
   VSPhotoGalleryS3BucketWebsite:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: vs-photo-gallery-website
+      BucketName: ${VsPhotoGalleryPrefix}--website
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: index.html
@@ -104,7 +107,7 @@ Resources:
   VSPhotoGalleryDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: vs-photo-gallery-metadata
+      TableName: ${VsPhotoGalleryPrefix}-photo-gallery-metadata
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
