@@ -1,6 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Vinicius Santos Photo Gallery Infrastructure
+
 Resources:
-  PhotoGallery:
+  VSPhotoGalleryLambdaFunctionExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: VSPhotoGalleryLambdaFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Resource: 
+                  - !Sub arn:aws:s3:::${VSPhotoGalleryS3Bucket}/*
+                  - !Sub arn:aws:s3:::${VSPhotoGalleryS3Bucket}
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${VSPhotoGalleryDynamoDBTable}
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+  VSPhotoGalleryLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Timeout: 10
+      MemorySize: 128
+      Code:
+        S3Bucket: vs-photo-gallery-lambda-code
+        S3Key: code.zip
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: vs-photo-gallery
+          DYNAMODB_TABLE_NAME: vs-photo-gallery-metadata
+      Role:
+        Fn::GetAtt:
+          - VSPhotoGalleryLambdaFunctionExecRole
+          - Arn
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+
+  VSPhotoGalleryS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${AWS::StackName}-photogallery
-      AccessControl: PublicRead
+      BucketName: vs-photo-gallery
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+  
+  VSPhotoGalleryS3BucketWebsite:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: vs-photo-gallery-website
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+  
+  VSPhotoGalleryS3BucketWebsitePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref VSPhotoGalleryS3BucketWebsite
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub arn:aws:s3:::${VSPhotoGalleryS3BucketWebsite}/*
+
+  VSPhotoGalleryDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: vs-photo-gallery-metadata
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
