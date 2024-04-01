@@ -1,6 +1,8 @@
+import type { Config } from 'jest';
+
 process.env.DYNAMODB_TABLE_NAME = 'test-table';
 
-module.exports = {
+const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     testMatch: ['**/*.test.ts'],
@@ -11,11 +13,13 @@ module.exports = {
     coveragePathIgnorePatterns: ['/node_modules/', '/test/'],
     moduleFileExtensions: ['ts', 'js', 'json'],
     transform: {
-        '^.+\\.ts$': 'ts-jest'
+        '^.+\\.ts$': 'ts-jest',
     },
     globals: {
         'ts-jest': {
-            tsConfig: 'tsconfig.json'
-        }
-    }
+            tsConfig: 'tsconfig.json',
+        },
+    },
 };
+
+export default config;
