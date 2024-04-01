@@ -4,6 +4,7 @@ export interface PictureRequest {
     name?: string
     description?: string
     imageUrl?: string
+    lastEvaluatedKey?: number
 }
 
 export interface Picture {

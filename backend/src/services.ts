@@ -36,12 +36,12 @@ async function createPicture(
  * List all pictures from the database paginated by 20 items.
  */
 async function listAllPictures(event: PictureRequest): Promise<Picture[]> {
-    const { page } = pictureListSchema.parse(event);
+    const { lastEvaluatedKey } = pictureListSchema.parse(event);
     const result = await dynamodb
         .scan({
             TableName: tableName,
             Limit: 20,
-            ExclusiveStartKey: page > 1 ? { id: page.toString() } : undefined,
+            ExclusiveStartKey: lastEvaluatedKey !== undefined ? { id: lastEvaluatedKey } : undefined,
         })
         .promise();
 

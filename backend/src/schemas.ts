@@ -11,5 +11,5 @@ export const pictureDeleteSchema = zod.object({
 });
 
 export const pictureListSchema = zod.object({
-    page: zod.number().int().positive().default(1),
+    lastEvaluatedKey: zod.string().optional(),
 });
