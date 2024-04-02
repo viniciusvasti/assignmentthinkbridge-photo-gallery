@@ -3,7 +3,7 @@ export interface PictureRequest {
     id?: string
     name?: string
     description?: string
-    imageUrl?: string
+    imageFileName?: string
     lastEvaluatedKey?: string
 }
 

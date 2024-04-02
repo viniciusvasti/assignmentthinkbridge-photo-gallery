@@ -4,6 +4,11 @@ import { type Picture, type PictureRequest } from './types';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const tableName = process.env.DYNAMODB_TABLE_NAME ?? '';
+const s3 = new AWS.S3({
+    signatureVersion: 'v4',
+    region: 'us-east-1',
+});
+const bucketName = process.env.S3_BUCKET_NAME ?? '';
 
 async function deletePicture(picture: PictureRequest): Promise<void> {
     const { id } = pictureDeleteSchema.parse(picture);
@@ -17,19 +22,29 @@ async function deletePicture(picture: PictureRequest): Promise<void> {
 
 async function createPicture(
     picture: PictureRequest,
-): Promise<void> {
-    const { name, description, imageUrl } = pictureCreateSchema.parse(picture);
+): Promise<{
+        id: string
+        signedUrl: string
+    }> {
+    const { name, description, imageFileName } = pictureCreateSchema.parse(picture);
+    const signedUrl = s3.getSignedUrl('putObject', {
+        Bucket: bucketName,
+        Key: imageFileName,
+        Expires: 300, // The URL expires in 5 minutes
+    });
+    const id = Date.now().toString();
     await dynamodb
         .put({
             TableName: tableName,
             Item: {
-                id: Date.now().toString(),
+                id,
                 name,
                 description,
-                imageUrl,
+                imageFileName,
             },
         })
         .promise();
+    return { id, signedUrl };
 }
 
 /**

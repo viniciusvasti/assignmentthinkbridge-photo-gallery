@@ -6,12 +6,15 @@ export async function handler(
     event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResult> {
     console.log('Received event:', JSON.stringify(event, null, 2));
+    const body = event.body ? JSON.parse(event.body) : {};
     const pictureRequest: PictureRequest = {
         method: event.requestContext.http.method || '',
         lastEvaluatedKey: event.queryStringParameters?.lastEvaluatedKey,
         id: event.queryStringParameters?.id,
+        name: body.name,
+        description: body.description,
+        imageFileName: body.imageFileName,
     };
-    console.log('event.requestContext:', JSON.stringify(event.requestContext));
     console.log('Received picture request:', JSON.stringify(pictureRequest, null, 2));
 
     try {
@@ -19,8 +22,12 @@ export async function handler(
         switch (pictureRequest.method) {
             case 'POST':
                 statusCode = 201;
-                await services.createPicture(pictureRequest);
-                break;
+                const response = await services.createPicture(pictureRequest);
+                console.log('Response:', JSON.stringify(response, null, 2));
+                return {
+                    statusCode,
+                    body: JSON.stringify(response),
+                };
             case 'GET':
                 return {
                     statusCode,
