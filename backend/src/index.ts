@@ -9,6 +9,7 @@ export async function handler(
     const pictureRequest: PictureRequest = {
         method: event.requestContext.http.method || '',
         lastEvaluatedKey: event.queryStringParameters?.lastEvaluatedKey,
+        id: event.queryStringParameters?.id,
     };
     console.log('event.requestContext:', JSON.stringify(event.requestContext));
     console.log('Received picture request:', JSON.stringify(pictureRequest, null, 2));
