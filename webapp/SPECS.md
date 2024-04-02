@@ -36,6 +36,7 @@ Duration: 4 days with a document for estimations of modules.
 
 ---
 [] Handle route errors
+[] Review DynamoDB table structure and indexes
 [] Pages metadata
 [] Allow edit image name and description
 [] Design review

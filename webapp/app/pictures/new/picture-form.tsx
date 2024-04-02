@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+
 import {
     Form,
     FormControl,
@@ -35,16 +36,31 @@ export default function PictureForm() {
 
     async function onSubmit(values: z.infer<typeof pictureFormSchema>) {
         try {
-            const formData = new FormData();
-            formData.append("file", file!);
-            formData.append("image", values.image);
-            formData.append("name", values.name);
-            if (values.description) {
-                formData.append("description", values.description);
-            }
-            console.log(formData);
+            const response = await fetch(
+                "https://vkdcla28i9.execute-api.us-east-1.amazonaws.com",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        name: values.name,
+                        description: values.description,
+                        imageFileName: file?.name,
+                    }),
+                }
+            );
+            const responseJson = await response.json();
+            console.log(file);
+            console.log("response", responseJson, responseJson.signedUrl);
 
-            router.back();
+            if (response.ok) {
+                const uploadResponse = await fetch(responseJson.signedUrl, {
+                    method: "PUT",
+                    body: file,
+                });
+                console.log("uploadResponse", uploadResponse);
+                if (uploadResponse.ok) {
+                    router.back();
+                }
+            }
         } catch (error: any) {
             console.error(error);
             form.setError("serverError", {
