@@ -1,10 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Vinicius Santos Photo Gallery Infrastructure
-# resources prefix variable:
-- VsPhotoGalleryPrefix: vinicius-santos
 
+Parameters:
+  VsPhotoGalleryPrefix:
+    Type: String
+    Default: vinicius-personal
+    Description: Prefix for all resources
 
 Resources:
+  VSPhotoGalleryLambdaS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${VsPhotoGalleryPrefix}-code
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+
   VSPhotoGalleryLambdaFunctionExecRole:
     Type: AWS::IAM::Role
     Properties:
@@ -47,20 +58,22 @@ Resources:
       Tags:
         - Key: Application
           Value: vinicius-santos-assignment
+
   VSPhotoGalleryLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
       Handler: index.handler
       Runtime: nodejs20.x
       Timeout: 10
       MemorySize: 128
       Code:
-        S3Bucket: ${VsPhotoGalleryPrefix}-lambda-code
+        S3Bucket: !Ref VSPhotoGalleryLambdaS3Bucket
         S3Key: code.zip
       Environment:
         Variables:
-          S3_BUCKET_NAME: vs-photo-gallery
-          DYNAMODB_TABLE_NAME: vs-photo-gallery-metadata
+          S3_BUCKET_NAME: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+          DYNAMODB_TABLE_NAME: !Sub ${VsPhotoGalleryPrefix}-photo-gallery-metadata
       Role:
         Fn::GetAtt:
           - VSPhotoGalleryLambdaFunctionExecRole
@@ -68,11 +81,75 @@ Resources:
       Tags:
         - Key: Application
           Value: vinicius-santos-assignment
+  
+  VSPhotoGalleryApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+      Description: Photo Gallery API
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Sub http://${VSPhotoGalleryS3BucketWebsite}.s3-website-${AWS::Region}.amazonaws.com
+        AllowMethods:
+          - GET
+          - POST
+          - DELETE
+        AllowHeaders:
+          - "*"
+        MaxAge: 3600
+      # Tags:
+      #   - Key: Application
+      #     Value: vinicius-santos-assignment
+
+  VSPhotoGalleryApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${VSPhotoGalleryLambdaFunction.Arn}/invocations
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      # Tags:
+      #   - Key: Application
+      #     Value: vinicius-santos-assignment
+
+  VSPhotoGalleryApiGatewayRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      RouteKey: GET /
+      Target: !Sub integrations/${VSPhotoGalleryApiGatewayIntegration}
+  
+  VSPhotoGalleryApiGatewayRoutePost:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      RouteKey: POST /
+      Target: !Sub integrations/${VSPhotoGalleryApiGatewayIntegration}
+  
+  VSPhotoGalleryApiGatewayRouteDelete:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      RouteKey: DELETE /
+      Target: !Sub integrations/${VSPhotoGalleryApiGatewayIntegration}
 
   VSPhotoGalleryS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: ${VsPhotoGalleryPrefix}-photo-gallery
+      BucketName: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+            AllowedOrigins:
+              - !Sub http://${VSPhotoGalleryS3BucketWebsite}.s3-website-${AWS::Region}.amazonaws.com
       Tags:
         - Key: Application
           Value: vinicius-santos-assignment
@@ -80,7 +157,7 @@ Resources:
   VSPhotoGalleryS3BucketWebsite:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: ${VsPhotoGalleryPrefix}--website
+      BucketName: !Sub ${VsPhotoGalleryPrefix}-website
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: index.html
@@ -107,7 +184,7 @@ Resources:
   VSPhotoGalleryDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: ${VsPhotoGalleryPrefix}-photo-gallery-metadata
+      TableName: !Sub ${VsPhotoGalleryPrefix}-photo-gallery-metadata
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
