@@ -33,6 +33,7 @@ async function createPicture(
         Expires: 300, // The URL expires in 5 minutes
     });
     const id = Date.now().toString();
+    const createdAt = new Date().toISOString();
     await dynamodb
         .put({
             TableName: tableName,
@@ -41,6 +42,7 @@ async function createPicture(
                 name,
                 description,
                 imageFileName,
+                createdAt,
             },
         })
         .promise();
@@ -59,8 +61,18 @@ async function listAllPictures(event: PictureRequest): Promise<Picture[]> {
             ExclusiveStartKey: lastEvaluatedKey !== undefined ? { id: lastEvaluatedKey } : undefined,
         })
         .promise();
+    const pictures = (result.Items ?? []).map(item => {
+        return {
+            ...item,
+            imageUrl: s3.getSignedUrl('getObject', {
+                Bucket: bucketName,
+                Key: item.imageFileName,
+                Expires: 300, // The URL expires in 5 minutes
+            }),
+        };
+    }) as Picture[];
 
-    return (result.Items ?? []) as Picture[];
+    return pictures;
 }
 
 export default {
