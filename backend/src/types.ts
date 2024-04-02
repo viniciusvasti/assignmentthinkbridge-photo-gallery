@@ -1,10 +1,10 @@
 export interface PictureRequest {
-    action: string
+    method: string
     id?: string
     name?: string
     description?: string
     imageUrl?: string
-    lastEvaluatedKey?: number
+    lastEvaluatedKey?: string
 }
 
 export interface Picture {

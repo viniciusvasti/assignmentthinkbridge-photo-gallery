@@ -14,5 +14,6 @@ module.exports = {
         "@typescript-eslint/space-before-function-paren": ["error", "never"],
         "@typescript-eslint/comma-dangle": ["error", "always-multiline"],
         "@typescript-eslint/quotes": ["error", "single"],
+        "@typescript-eslint/strict-boolean-expressions": "off",
     }
 }

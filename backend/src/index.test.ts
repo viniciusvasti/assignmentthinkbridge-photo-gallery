@@ -1,6 +1,6 @@
 import type AWS from 'aws-sdk';
 import { handler } from './index';
-import { type PictureRequest } from './types';
+import { type APIGatewayProxyEventV2 } from 'aws-lambda';
 
 const items = [
     {
@@ -17,20 +17,72 @@ const items = [
     },
 ];
 
-const createEvent: PictureRequest = {
-    action: 'create',
-    name: 'Test',
-    description: 'Test',
-    imageUrl: 'https://test.com/test.jpg',
+const createEvent: APIGatewayProxyEventV2 = {
+    version: '2.0',
+    routeKey: 'POST /',
+    rawPath: '/',
+    rawQueryString: '',
+    headers: {
+        accept: '*/*',
+        'content-length': '0',
+        host: 'vkdcla28i9.execute-api.us-east-1.amazonaws.com',
+        'user-agent': 'curl/8.4.0',
+        'x-amzn-trace-id': 'Root=1-660c0100-0ed7826160bd8b316277b944',
+        'x-forwarded-for': '179.187.47.71',
+        'x-forwarded-port': '443',
+        'x-forwarded-proto': 'https',
+    },
+    requestContext: {
+        accountId: '535726746963',
+        apiId: 'vkdcla28i9',
+        domainName: 'vkdcla28i9.execute-api.us-east-1.amazonaws.com',
+        domainPrefix: 'vkdcla28i9',
+        http: {
+            method: 'POST',
+            path: '/',
+            protocol: 'HTTP/1.1',
+            sourceIp: '179.187.47.71',
+            userAgent: 'curl/8.4.0',
+        },
+        requestId: 'VmUYJhsGoAMEaJg=',
+        routeKey: 'POST /',
+        stage: '$default',
+        time: '02/Apr/2024:12:58:40 +0000',
+        timeEpoch: 1712062720668,
+    },
+    body: JSON.stringify({
+        name: 'Test',
+        description: 'Test description',
+        imageUrl: 'https://test.com/test.jpg',
+    }),
+    isBase64Encoded: false,
 };
 
-const listEvent: PictureRequest = {
-    action: 'listAll',
+const listEvent: APIGatewayProxyEventV2 = {
+    ...createEvent,
+    routeKey: 'GET /',
+    requestContext: {
+        ...createEvent.requestContext,
+        http: {
+            ...createEvent.requestContext.http,
+            method: 'GET',
+        },
+    },
 };
 
-const deleteEvent: PictureRequest = {
-    action: 'delete',
-    id: '123',
+const deleteEvent: APIGatewayProxyEventV2 = {
+    ...createEvent,
+    routeKey: 'DELETE /',
+    requestContext: {
+        ...createEvent.requestContext,
+        http: {
+            ...createEvent.requestContext.http,
+            method: 'DELETE',
+        },
+    },
+    body: JSON.stringify({
+        id: '123',
+    }),
 };
 
 const mockPut = jest.fn();
@@ -68,9 +120,9 @@ describe('handler', () => {
             TableName: tableName,
             Item: {
                 id: expect.any(String),
-                name: createEvent.name,
-                description: createEvent.description,
-                imageUrl: createEvent.imageUrl,
+                name: 'Test',
+                description: 'Test description',
+                imageUrl: 'https://test.com/test.jpg',
             },
         });
 
@@ -90,7 +142,7 @@ describe('handler', () => {
         // Assert
         expect(mockDelete).toHaveBeenCalledWith({
             TableName: tableName,
-            Key: { id: deleteEvent.id },
+            Key: { id: '123' },
         });
 
         expect(response).toEqual({
@@ -113,22 +165,6 @@ describe('handler', () => {
         expect(response).toEqual({
             statusCode: 200,
             body: JSON.stringify(items),
-        });
-    });
-
-    it('should return an error for invalid action', async() => {
-        // Arrange
-        const invalidEvent = {
-            action: 'invalid',
-        };
-
-        // Act
-        const result = await handler(invalidEvent);
-
-        // Assert
-        expect(result).toEqual({
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Invalid action' }),
         });
     });
 
