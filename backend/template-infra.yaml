@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Vinicius Santos Photo Gallery Infrastructure
+
+Parameters:
+  VsPhotoGalleryPrefix:
+    Type: String
+    Default: vinicius-tb
+    Description: Prefix for all resources
+  NetworkStackName:
+    Type: String
+    Default: vinicius-tb
+    Description: Name of the global stack
+
+Resources:
+  VSPhotoGalleryLambdaFunctionExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: VSPhotoGalleryLambdaFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Resource: 
+                  - !Sub arn:aws:s3:::${VsPhotoGalleryPrefix}-photo-gallery/*
+                  - !Sub arn:aws:s3:::${VsPhotoGalleryPrefix}-photo-gallery
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${VsPhotoGalleryPrefix}-photo-gallery-metadata
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+
+  VSPhotoGalleryLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Timeout: 10
+      MemorySize: 128
+      Code:
+        S3Bucket: !Sub ${VsPhotoGalleryPrefix}-code
+        S3Key: code.zip
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+          DYNAMODB_TABLE_NAME: !Sub ${VsPhotoGalleryPrefix}-photo-gallery-metadata
+      Role:
+        Fn::GetAtt:
+          - VSPhotoGalleryLambdaFunctionExecRole
+          - Arn
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+  
+  VSPhotoGalleryApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+      Description: Photo Gallery API
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Sub http://${VsPhotoGalleryPrefix}-website.s3-website-${AWS::Region}.amazonaws.com
+          - http://localhost:3000
+        AllowMethods:
+          - GET
+          - POST
+          - DELETE
+        AllowHeaders:
+          - "*"
+        MaxAge: 3600
+
+  VSPhotoGalleryApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${VSPhotoGalleryLambdaFunction.Arn}/invocations
+      IntegrationMethod: POST
+      PayloadFormatVersion: 2.0
+      # Tags:
+      #   - Key: Application
+      #     Value: vinicius-santos-assignment
+
+  VSPhotoGalleryApiGatewayRouteGet:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      RouteKey: GET /
+      Target: !Sub integrations/${VSPhotoGalleryApiGatewayIntegration}
+  
+  VSPhotoGalleryApiGatewayRoutePost:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      RouteKey: POST /
+      Target: !Sub integrations/${VSPhotoGalleryApiGatewayIntegration}
+  
+  VSPhotoGalleryApiGatewayRouteDelete:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref VSPhotoGalleryApiGateway
+      RouteKey: DELETE /
+      Target: !Sub integrations/${VSPhotoGalleryApiGatewayIntegration}
