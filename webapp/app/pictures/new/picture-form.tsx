@@ -37,7 +37,7 @@ export default function PictureForm() {
     async function onSubmit(values: z.infer<typeof pictureFormSchema>) {
         try {
             const response = await fetch(
-                "https://vkdcla28i9.execute-api.us-east-1.amazonaws.com",
+                "https://ml1bmq18u9.execute-api.us-east-1.amazonaws.com",
                 {
                     method: "POST",
                     body: JSON.stringify({
