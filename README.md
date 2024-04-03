@@ -1,5 +1,5 @@
 # The Project
-Webapp URL: http://vs-photo-gallery-website.s3-website-us-east-1.amazonaws.com
+Webapp URL: http://vinicius-tb-website.s3-website-us-east-1.amazonaws.com/
 
 ## Infrastructure
 - Build with AWS CloudFormation
