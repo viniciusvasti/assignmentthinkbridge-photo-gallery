@@ -27,6 +27,8 @@ The feature of uploading multiple images at once is missing for this MVP. Since 
 ## Evolving the Project / Architecture
 Here are the next steps I'd take to evolve/improve the project:
 
+- Optimize the images uploaded to S3
+- Caching
 - Improve logging
 - Make pagination work through query params instead of local state
 - Better use of variables for the CloudFormation stacks
