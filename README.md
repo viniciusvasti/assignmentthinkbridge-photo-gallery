@@ -4,12 +4,6 @@ Webapp URL: http://vs-photo-gallery-website.s3-website-us-east-1.amazonaws.com
 ## Infrastructure
 - Build with AWS CloudFormation
 
-### Deployment
-1. Run `./deploy-infra.sh` to deploy the general CloudFormation stack
-2. Run `./package-lambda.sh` to package the Lambda code and upload it to the S3 bucket
-3. Run `./deploy-infra-backend.sh` to deploy the Lambda CloudFormation stack
-4. Run `./deploy-webapp.sh` to deploy the webapp to the S3 bucket
-
 ## Frontend
 - Build with Next.js and TypeScript
 - Styled with Tailwindcss
@@ -22,8 +16,13 @@ Webapp URL: http://vs-photo-gallery-website.s3-website-us-east-1.amazonaws.com
 - Along with [Zod](https://zod.dev) for schema validations
 
 ### Deployment
-1. Run `./package-lambda.sh` to transpile the TypeScript code to JavaScript and create a code.zip in the root directory
-2. Access the AWS Console and upload the code.zip to the S3 `vs-photo-gallery-lambda-code` bucket
+1. Run `./deploy-infra.sh` to deploy the general CloudFormation stack
+2. Run `./package-lambda.sh` to package the Lambda code and upload it to the S3 bucket
+3. Run `./deploy-infra-backend.sh` to deploy the Lambda CloudFormation stack
+4. Run `./deploy-webapp.sh` to deploy the webapp to the S3 bucket
+
+## Known Issues
+The feature of uploading multiple images at once is missing for this MVP. Since I had to prioritize other tasks (my actual job, even during the weekend because of a new production release), I figured that this feature would be the least important for the MVP. I'm sorry for that.
 
 ## Evolving the Project / Architecture
 Here are the next steps I'd take to evolve/improve the project:
