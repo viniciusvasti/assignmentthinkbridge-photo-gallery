@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Vinicius Santos Photo Gallery Infrastructure
+
+Parameters:
+  VsPhotoGalleryPrefix:
+    Type: String
+    Default: vinicius-tb
+    Description: Prefix for all resources
+
+Resources:
+  VSPhotoGalleryLambdaS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${VsPhotoGalleryPrefix}-code
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+
+  VSPhotoGalleryS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${VsPhotoGalleryPrefix}-photo-gallery
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+            AllowedOrigins:
+              - !Sub http://${VSPhotoGalleryS3BucketWebsite}.s3-website-${AWS::Region}.amazonaws.com
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+  
+  VSPhotoGalleryS3BucketWebsite:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${VsPhotoGalleryPrefix}-website
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+  
+  VSPhotoGalleryS3BucketWebsitePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref VSPhotoGalleryS3BucketWebsite
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub arn:aws:s3:::${VSPhotoGalleryS3BucketWebsite}/*
+
+  VSPhotoGalleryDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${VsPhotoGalleryPrefix}-photo-gallery-metadata
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: Application
+          Value: vinicius-santos-assignment
+
+Outputs:
+  VSPhotoGalleryLambdaS3Bucket:
+    Description: S3 bucket for Lambda code
+    Value: !Ref VSPhotoGalleryLambdaS3Bucket
+    Export:
+      Name: !Sub ${VsPhotoGalleryPrefix}-LambdaBucket
